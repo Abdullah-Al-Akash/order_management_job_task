@@ -1,16 +1,29 @@
 import { useEffect, useState } from 'react';
-import axiosPublic from '@/api/axiosPublic';
+import axiosPublic from '../../api/axiosPublic';
 import { motion } from 'framer-motion';
-import OrderModal from './OrderModal';
+import AddOrderModal from './AddOrderModal';
+import LoginModal from '../LoginModal';
 import { ShoppingCart } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext'; // ✅ Use auth context
 
 export default function UsersTable() {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [loginOpen, setLoginOpen] = useState(false); // ✅ Login modal
+  const { isAdminLoggedIn } = useAuth(); // ✅ Get login status
 
   useEffect(() => {
     axiosPublic.get('/customers').then(res => setUsers(res.data));
   }, []);
+
+  // ✅ When user clicks "Add Order"
+  const handleOrderClick = (user) => {
+    if (!isAdminLoggedIn) {
+      setLoginOpen(true); // show login first
+    } else {
+      setSelectedUser(user); // show order modal
+    }
+  };
 
   return (
     <motion.div
@@ -34,7 +47,7 @@ export default function UsersTable() {
               <td>
                 <button
                   className="btn btn-sm btn-outline btn-primary flex items-center gap-2"
-                  onClick={() => setSelectedUser(user)}
+                  onClick={() => handleOrderClick(user)}
                 >
                   <ShoppingCart size={16} /> Add Order
                 </button>
@@ -44,7 +57,17 @@ export default function UsersTable() {
         </tbody>
       </table>
 
-      <OrderModal
+      {/* 🔐 Login Modal */}
+      <LoginModal
+        isOpen={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        onLogin={() => {
+          setLoginOpen(false);
+        }}
+      />
+
+      {/* 🛒 Add Order Modal */}
+      <AddOrderModal
         isOpen={!!selectedUser}
         user={selectedUser}
         onClose={() => setSelectedUser(null)}

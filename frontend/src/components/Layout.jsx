@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import LoginModal from "./LoginModal";
-import { User, Package, ClipboardList } from "lucide-react";
 import UsersTable from "./users/UsersTable";
 import ProductsTable from "./products/ProductsTable";
+import OrdersTable from "./orders/OrdersTable";  // <-- Import OrdersTable
+import { User, Package, ClipboardList } from "lucide-react";
 
 const tabs = [
   { id: "Users", icon: <User size={18} /> },
@@ -30,7 +31,7 @@ export default function Layout() {
         </button>
       </header>
 
-      {/* Tab Navigation */}
+      {/* Tabs */}
       <nav className="bg-white shadow">
         <ul className="flex justify-center space-x-6 py-3">
           {tabs.map(({ id, icon }) => (
@@ -89,7 +90,7 @@ export default function Layout() {
               transition={{ duration: 0.25 }}
             >
               <h2 className="text-xl md:text-2xl font-semibold mb-4">Orders</h2>
-              {/* 🔻 Replace with <OrdersTable /> */}
+              <OrdersTable />  {/* <-- Use OrdersTable here */}
             </motion.div>
           )}
         </AnimatePresence>
