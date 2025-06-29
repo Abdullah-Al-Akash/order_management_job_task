@@ -1,31 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useProducts } from '@/hooks/useProducts';
 
-export default function UpdateProductModal({ isOpen, product, onClose }) {
-  const { updateProduct } = useProducts();
+export default function AddProductModal({ isOpen, onClose }) {
+  const { addProduct } = useProducts();
 
-  // Form state for product fields
   const [formData, setFormData] = useState({
     name: '',
     price: '',
     stock: '',
   });
 
-  // When product changes (modal opens), populate form fields
-  useEffect(() => {
-    if (product) {
-      setFormData({
-        name: product.name || '',
-        price: product.price !== undefined ? product.price : '',
-        stock: product.stock !== undefined ? product.stock : '',
-      });
-    }
-  }, [product]);
-
-  // Handle input changes in form fields
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -34,33 +21,24 @@ export default function UpdateProductModal({ isOpen, product, onClose }) {
     }));
   };
 
-  // Submit handler - send only valid fields to backend
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // Prepare update data - only send fields that are valid and not empty
-  const updates = {};
-  if (formData.name.trim() !== '') updates.name = formData.name.trim();
-  if (formData.price !== '' && !isNaN(formData.price)) updates.price = parseFloat(formData.price);
-  if (formData.stock !== '' && !isNaN(formData.stock)) updates.stock = parseInt(formData.stock);
+    try {
+      await addProduct.mutateAsync({
+        name: formData.name,
+        price: parseFloat(formData.price),
+        stock: parseInt(formData.stock),
+      });
 
-  // If nothing valid to update, show error
-  if (Object.keys(updates).length === 0) {
-    Swal.fire('Error', 'Please provide at least one valid field to update.', 'error');
-    return;
-  }
+      Swal.fire('Added!', 'Product added successfully', 'success');
+      onClose();
+      setFormData({ name: '', price: '', stock: '' }); // reset form
+    } catch (err) {
+      Swal.fire('Error', err.response?.data?.error || 'Failed to add product', 'error');
+    }
+  };
 
-  try {
-    // Call mutation to update product by id and updates object
-    await updateProduct.mutateAsync({ id: product.id, ...updates });
-    Swal.fire('Updated!', 'Product updated successfully', 'success');
-    onClose(); // Close modal after success
-  } catch (err) {
-    Swal.fire('Error', err.response?.data?.error || 'Failed to update', 'error');
-  }
-};
-
-  // If modal is not open, render nothing
   if (!isOpen) return null;
 
   return (
@@ -78,7 +56,6 @@ export default function UpdateProductModal({ isOpen, product, onClose }) {
           exit={{ y: -20, opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {/* Close button */}
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-500 hover:text-red-500"
@@ -87,9 +64,8 @@ export default function UpdateProductModal({ isOpen, product, onClose }) {
             <X />
           </button>
 
-          <h3 className="text-xl font-bold mb-4 text-orange-600">Update Product</h3>
+          <h3 className="text-xl font-bold mb-4 text-orange-600">Add Product</h3>
 
-          {/* Update form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
               type="text"
@@ -98,6 +74,7 @@ export default function UpdateProductModal({ isOpen, product, onClose }) {
               onChange={handleChange}
               placeholder="Product Name"
               className="input input-bordered w-full"
+              required
             />
             <input
               type="number"
@@ -106,6 +83,7 @@ export default function UpdateProductModal({ isOpen, product, onClose }) {
               onChange={handleChange}
               placeholder="Price"
               className="input input-bordered w-full"
+              required
             />
             <input
               type="number"
@@ -114,9 +92,10 @@ export default function UpdateProductModal({ isOpen, product, onClose }) {
               onChange={handleChange}
               placeholder="Stock"
               className="input input-bordered w-full"
+              required
             />
             <button className="btn btn-primary w-full" type="submit">
-              Update
+              Add
             </button>
           </form>
         </motion.div>

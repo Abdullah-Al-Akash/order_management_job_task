@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import LoginModal from "./LoginModal";
 import UsersTable from "./users/UsersTable";
 import ProductsTable from "./products/ProductsTable";
 import OrdersTable from "./orders/OrdersTable";  // <-- Import OrdersTable
@@ -14,21 +13,14 @@ const tabs = [
 
 export default function Layout() {
   const [activeTab, setActiveTab] = useState("Users");
-  const [loginOpen, setLoginOpen] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col bg-base-100">
       {/* Header */}
-      <header className="flex justify-between items-center px-6 py-4 shadow bg-white">
-        <h1 className="text-2xl md:text-3xl font-semibold">
+      <header className="flex justify-center items-center px-6 py-12 shadow bg-white">
+        <h1 className="text-2xl md:text-3xl font-semibold underline">
           Order Management System
         </h1>
-        <button
-          onClick={() => setLoginOpen(true)}
-          className="btn btn-primary btn-sm md:btn-md"
-        >
-          Login
-        </button>
       </header>
 
       {/* Tabs */}
@@ -95,16 +87,6 @@ export default function Layout() {
           )}
         </AnimatePresence>
       </main>
-
-      {/* Login Modal */}
-      <LoginModal
-        isOpen={loginOpen}
-        onClose={() => setLoginOpen(false)}
-        onLogin={(data) => {
-          console.log("Logged in as:", data);
-          setLoginOpen(false);
-        }}
-      />
     </div>
   );
 }
