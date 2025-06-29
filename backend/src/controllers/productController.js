@@ -33,17 +33,20 @@ exports.updateProduct = async (req, res) => {
     const productId = parseInt(req.params.id);
     const { name, price, stock } = req.body;
 
+    // Check if at least one field is provided
     if (!name && price === undefined && stock === undefined) {
       return res.status(400).json({ error: 'At least one field (name, price, stock) must be provided' });
     }
 
+    // Prepare the update data
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (price !== undefined) updateData.price = parseFloat(price);
+    if (stock !== undefined) updateData.stock = parseInt(stock);
+
     const updatedProduct = await prisma.product.update({
       where: { id: productId },
-      data: {
-        ...(name && { name }),
-        ...(price !== undefined && { price: parseFloat(price) }),
-        ...(stock !== undefined && { stock: parseInt(stock) }),
-      },
+      data: updateData,
     });
 
     res.json(updatedProduct);

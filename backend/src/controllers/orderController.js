@@ -1,11 +1,13 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 exports.createOrder = async (req, res) => {
   try {
     const { customerId, items } = req.body;
     if (!customerId || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ error: 'customerId and items are required' });
+      return res
+        .status(400)
+        .json({ error: "customerId and items are required" });
     }
 
     // Create the order
@@ -17,12 +19,18 @@ exports.createOrder = async (req, res) => {
 
     // Process order items
     for (const item of items) {
-      const product = await prisma.product.findUnique({ where: { id: item.productId } });
+      const product = await prisma.product.findUnique({
+        where: { id: item.productId },
+      });
       if (!product) {
-        return res.status(404).json({ error: `Product with ID ${item.productId} not found` });
+        return res
+          .status(404)
+          .json({ error: `Product with ID ${item.productId} not found` });
       }
       if (product.stock < item.quantity) {
-        return res.status(400).json({ error: `Not enough stock for product ID ${item.productId}` });
+        return res.status(400).json({
+          error: `Not enough stock for product '${product.name}' (Available: ${product.stock}, Requested: ${item.quantity})`,
+        });
       }
 
       // Create order item
@@ -45,10 +53,11 @@ exports.createOrder = async (req, res) => {
     const orderWithItems = await prisma.order.findUnique({
       where: { id: order.id },
       include: {
-        items: {               // <-- Correct field name here
-          include: { product: true }
-        }
-      }
+        items: {
+          include: { product: true },
+        },
+        customer: true,
+      },
     });
 
     res.status(201).json(orderWithItems);
@@ -57,7 +66,6 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-
 exports.getOrderDetails = async (req, res) => {
   try {
     const orderId = parseInt(req.params.id);
@@ -65,14 +73,14 @@ exports.getOrderDetails = async (req, res) => {
       where: { id: orderId },
       include: {
         items: {
-          include: { product: true }
+          include: { product: true },
         },
-        customer: true
-      }
+        customer: true,
+      },
     });
 
     if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ error: "Order not found" });
     }
 
     res.json(order);
@@ -89,16 +97,53 @@ exports.getCustomerOrders = async (req, res) => {
       where: { customerId },
       include: {
         items: {
-          include: { product: true }
-        }
+          include: { product: true },
+        },
+        customer: true,
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
 
     if (!orders.length) {
-      return res.status(404).json({ error: 'No orders found for this customer' });
+      return res
+        .status(404)
+        .json({ error: "No orders found for this customer" });
     }
 
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getAllOrders = async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      include: {
+        customer: true,
+        items: {
+          include: { product: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getAllOrders = async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      include: {
+        customer: true,
+        items: {
+          include: { product: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
     res.json(orders);
   } catch (error) {
     res.status(500).json({ error: error.message });
